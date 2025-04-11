@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  prom-server:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitor
+
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    environment: 
+      - LOKI_HOST=http://loki:3100  # ✅ fixed name
+    networks:
+      - monitor
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - 3100:3100
+    networks:
+      - monitor
+  
+  grafana:
+    image: grafana/grafana-oss
+    container_name: grafana
+    ports:
+      - 3002:3000
+    networks:
+      - monitor  # ✅ fixed
+
+networks:
+  monitor:
+    driver: bridge
